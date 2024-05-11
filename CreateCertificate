@@ -1,0 +1,21 @@
+$certName = "MySelfSignedCert"
+$certPath = "C:\certificate\$certName.pfx"
+$certPassword = ConvertTo-SecureString -String "YourPassword" -Force -AsPlainText
+$expiryDate = (Get-Date).AddYears(1)
+
+# Create a new self-signed certificate
+New-SelfSignedCertificate `
+    -DnsName "MySelfSignedCert", "example.com" `
+    -CertStoreLocation "Cert:\CurrentUser\My" `
+    -NotAfter $expiryDate `
+    -FriendlyName $certName `
+    -KeySpec KeyExchange
+
+# Export the certificate to a PFX file
+$cert = @(Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object { $_.FriendlyName -eq $certName })[0]
+if ($cert -eq $null) {
+    Write-Host "Certificate with friendly name '$certName' not found."
+} else {
+    Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
+    Write-Host "Certificate Thumbprint:" $cert.Thumbprint
+}
